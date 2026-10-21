@@ -1,4 +1,8 @@
 /* ============ 基础 ============ */
+/* 隐藏滚动条：贴合移动端风格；同时避免鼠标悬停滚动条时触发预览宿主脚本报错 */
+::-webkit-scrollbar { width: 0; height: 0; display: none; }
+html { scrollbar-width: none; -ms-overflow-style: none; }
+
 :root {
   --primary: #3A5A4E;
   --primary-light: rgba(58, 90, 78, 0.12);
@@ -575,8 +579,19 @@ input { font-family: inherit; color: var(--text); }
 
 .key:active { background: #F3F1EA; }
 
-.key-fn { background: #F1EEE5; font-size: 15px; color: var(--text2); }
+.key-fn { background: var(--card); font-size: 15px; color: var(--text); }
 .key-op { font-size: 22px; color: var(--primary); }
+
+/* 「今天」键：与数字键同色，选中今天时高亮 */
+.key-today.on {
+  background: #3A4A5E;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 3px 8px rgba(58, 74, 94, 0.3);
+}
+
+/* 显示日期字样时略缩字号以适配键宽 */
+.key-today.has-date { font-size: 13px; }
 
 .key-ok {
   background: var(--primary);
@@ -923,6 +938,79 @@ input { font-family: inherit; color: var(--text); }
   background: var(--primary-light);
   color: var(--primary);
   font-size: 14px;
+  font-weight: 600;
+}
+
+/* 日期选择（录入页「今天」/ 日期胶囊）—— 主色 #3A4A5E */
+.date-picker { text-align: center; padding-top: 8px; }
+
+.date-picker .as-cat { margin-top: -52px; }
+
+/* 弹窗内小猫插画同步改为主色 */
+.date-picker .cat-illu { stroke: #3A4A5E; }
+.date-picker .cat-illu circle[fill="#E0A5A5"] { fill: #3A4A5E; }
+
+.dp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.date-picker .mp-nav { color: #3A4A5E; }
+
+.dp-title { min-width: 108px; color: #3A4A5E; }
+
+.mp-nav:disabled { opacity: 0.3; }
+
+.dp-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+
+.dp-weekdays span {
+  text-align: center;
+  font-size: 12px;
+  color: #3A4A5E;
+}
+
+.dp-weekdays .weekend { color: #8D9DB3; }
+
+.dp-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  row-gap: 2px;
+}
+
+.dp-day {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--text);
+  border-radius: 50%;
+}
+
+.dp-day.weekend { color: #8D9DB3; }
+
+/* 非本月日期：置灰但可点击直达 */
+.dp-day.out { color: rgba(58, 74, 94, 0.45); }
+
+/* 今天（未选中时）淡主色底 */
+.dp-day.today:not(.selected) {
+  background: rgba(58, 74, 94, 0.10);
+  color: #3A4A5E;
+  font-weight: 600;
+}
+
+/* 选中：主色填充白字 */
+.dp-day.selected {
+  background: #3A4A5E;
+  color: #fff;
   font-weight: 600;
 }
 

@@ -216,7 +216,7 @@ Pages.entry = function () {
     <button class="key" data-action="key" data-key="1">1</button>
     <button class="key" data-action="key" data-key="2">2</button>
     <button class="key" data-action="key" data-key="3">3</button>
-    <button class="key key-fn" data-action="key" data-key="today">今天</button>
+    <button class="key key-fn key-today ${e.date === Util.todayStr() ? 'on' : 'has-date'}" data-action="key" data-key="today">${e.date === Util.todayStr() ? '今天' : Util.cnDate(e.date)}</button>
     <button class="key" data-action="key" data-key="4">4</button>
     <button class="key" data-action="key" data-key="5">5</button>
     <button class="key" data-action="key" data-key="6">6</button>
@@ -680,6 +680,60 @@ function monthPickerHTML() {
         }).join('')}
       </div>
       <button class="mp-today" data-action="mp-pick" data-ym="${cur}">回到本月</button>
+    </div>
+  </div>`;
+}
+
+/* ============ 日期选择弹窗（录入页「今天」/ 日期胶囊） ============ */
+function datePickerHTML() {
+  const st = App.state;
+  const ym = st.datePickerYm;
+  const [y, m] = ym.split('-').map(Number);
+  const today = Util.todayStr();
+  const selected = st.entry ? st.entry.date : today;
+
+  const dayCell = (date, out) => {
+    const [cy, cm, cd] = date.split('-').map(Number);
+    const w = new Date(cy, cm - 1, cd).getDay();
+    const cls = [
+      (w === 0 || w === 6) ? 'weekend' : '',
+      out ? 'out' : '',
+      date === selected ? 'selected' : '',
+      date === today ? 'today' : ''
+    ].filter(Boolean).join(' ');
+    return `<button class="dp-day ${cls}" data-action="dp-pick" data-date="${date}">${cd}</button>`;
+  };
+
+  /* 周一开头：前补上月末尾、后补下月开头，均可点击直达 */
+  const first = Util.firstWeekday(ym);
+  const days = Util.daysInMonth(ym);
+  const prevYm = Util.prevMonth(ym);
+  const nextYm = Util.nextMonth(ym);
+  const prevDays = Util.daysInMonth(prevYm);
+
+  let cells = '';
+  for (let i = 0; i < first; i++) {
+    const d = prevDays - first + 1 + i;
+    cells += dayCell(`${prevYm}-${Util.pad(d)}`, true);
+  }
+  for (let d = 1; d <= days; d++) cells += dayCell(`${ym}-${Util.pad(d)}`, false);
+  const rest = (7 - (first + days) % 7) % 7;
+  for (let i = 1; i <= rest; i++) cells += dayCell(`${nextYm}-${Util.pad(i)}`, true);
+
+  const weekdays = ['一', '二', '三', '四', '五', '六', '日']
+    .map((w, i) => `<span class="${i >= 5 ? 'weekend' : ''}">${w}</span>`).join('');
+
+  return `
+  <div class="modal-mask" data-action="close-modal">
+    <div class="modal date-picker" data-stop>
+      <div class="as-cat">${catIllustration()}</div>
+      <div class="dp-head">
+        <button class="mp-nav" data-action="dp-month" data-d="-1" aria-label="上一个月">${Icons.chevronLeft(18)}</button>
+        <span class="dp-title">${y} 年 ${m} 月</span>
+        <button class="mp-nav" data-action="dp-month" data-d="1" aria-label="下一个月">${Icons.chevronRight(18)}</button>
+      </div>
+      <div class="dp-weekdays">${weekdays}</div>
+      <div class="dp-grid">${cells}</div>
     </div>
   </div>`;
 }

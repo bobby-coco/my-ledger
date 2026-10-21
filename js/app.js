@@ -17,6 +17,8 @@ const App = {
     monthPickerYear: new Date().getFullYear(),
     monthPickerOpen: false,
     monthPickerTarget: 'stats',
+    datePickerOpen: false,
+    datePickerYm: Util.monthOf(Util.todayStr()),
     accountEdit: null,
     billMenuId: null,
     billMenuPos: null,
@@ -65,6 +67,7 @@ const App = {
   renderModal() {
     let html = '';
     if (this.state.monthPickerOpen) html += monthPickerHTML();
+    if (this.state.datePickerOpen) html += datePickerHTML();
     if (this.state.accountEdit) html += accountEditorHTML();
     if (this.state.billMenuId) html += billMenuHTML();
     if (this.state.deleteConfirmId) html += deleteConfirmHTML();
@@ -191,9 +194,10 @@ const App = {
     if (k === 'ok') { this.saveEntry(); return; }
 
     if (k === 'today') {
-      e.date = Util.todayStr();
-      toast('已切换到今天');
-      this.render();
+      /* 弹出日历（定位到当前月），供选择记账日期 */
+      this.state.datePickerYm = Util.monthOf(Util.todayStr());
+      this.state.datePickerOpen = true;
+      this.renderModal();
       return;
     }
 
@@ -440,7 +444,7 @@ const App = {
     this.state.billMenuId = id;
     const POP_W = 112, POP_H = 92;
     let top = 80, left = 0;
-    if (anchorEl) {
+    if (anchorEl && typeof anchorEl.getBoundingClientRect === 'function') {
       const r = anchorEl.getBoundingClientRect();
       top = r.top - POP_H - 6;
       if (top < 70) top = r.bottom + 6; /* 空间不足时向下展开 */
@@ -638,17 +642,27 @@ const App = {
         this.entryKey(el.dataset.key);
         break;
       case 'pick-bill-date': {
-        const input = document.createElement('input');
-        input.type = 'date';
-        input.value = st.entry.date;
-        input.style.position = 'fixed';
-        input.style.opacity = '0';
-        document.body.appendChild(input);
-        input.addEventListener('change', () => {
-          if (input.value) { st.entry.date = input.value; this.render(); }
-          input.remove();
-        });
-        input.showPicker ? input.showPicker() : input.click();
+        st.datePickerYm = Util.monthOf(st.entry.date);
+        st.datePickerOpen = true;
+        this.renderModal();
+        break;
+      }
+
+      /* ---- 日期选择（录入页） ---- */
+      case 'dp-month': {
+        const d = Number(el.dataset.d);
+        st.datePickerYm = d > 0 ? Util.nextMonth(st.datePickerYm) : Util.prevMonth(st.datePickerYm);
+        this.renderModal();
+        break;
+      }
+      case 'dp-pick': {
+        const d = el.dataset.date;
+        if (st.entry) st.entry.date = d;
+        st.datePickerYm = Util.monthOf(d);
+        st.datePickerOpen = false;
+        this.renderModal();
+        this.render();
+        toast(d === Util.todayStr() ? '已切换到今天' : '已切换到' + Util.cnDate(d) + ' ' + Util.weekdayCN(d));
         break;
       }
 
@@ -838,6 +852,7 @@ const App = {
       /* ---- 弹窗 ---- */
       case 'close-modal':
         st.monthPickerOpen = false;
+        st.datePickerOpen = false;
         st.accountEdit = null;
         st.billMenuId = null;
         st.deleteConfirmId = null;
